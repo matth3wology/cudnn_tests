@@ -4,7 +4,7 @@ LIB=-L"C:\Program Files (x86)\opencv\build\x64\vc15\lib" -L"C:\Program Files\NVI
 LIBRARY_FLAGS=-lopencv_world430 -lcublas -lcudnn
 
 all:
-	$(CC) main.cpp $(INCLUDE) $(LIB) $(LIBRARY_FLAGS) -o main
+	$(CC) convolution.cpp $(INCLUDE) $(LIB) $(LIBRARY_FLAGS) -o main
 
 clean:
 	DEL *.ex*
