@@ -5,3 +5,7 @@ LIBRARY_FLAGS=-lopencv_world430 -lcublas -lcudnn
 
 all:
 	$(CC) main.cpp $(INCLUDE) $(LIB) $(LIBRARY_FLAGS) -o main
+
+clean:
+	DEL *.ex*
+	DEL *.lib

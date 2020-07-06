@@ -53,11 +53,11 @@ int main() {
     };
 
     float h_kernel[3][3][3][3];
-    for(int k;k<3;k++) {
-    for(int c;c<3;c++) {
-        for(int r;r<3;r++) {
-        for(int c;c<3;c++) {
-            h_kernel[k][c][r][c] = kernel_template[r][c];
+    for(int k = 0;k<3;++k) {
+    for(int chan = 0;chan<3;++chan) {
+        for(int r = 0;r<3;++r) {
+        for(int c = 0;c<3;++c) {
+            h_kernel[k][chan][r][c] = kernel_template[r][c];
         }
         }
     }
@@ -74,10 +74,10 @@ int main() {
     cudnnSetTensor4dDescriptor(output_tensor,CUDNN_TENSOR_NHWC,CUDNN_DATA_FLOAT,batch_size,channels,height,width);
 
     cudnnCreateFilterDescriptor(&kernel);
-    cudnnSetFilter4dDescriptor(kernel,CUDNN_DATA_FLOAT,CUDNN_TENSOR_NHWC,channels,channels,height,width);
+    cudnnSetFilter4dDescriptor(kernel,CUDNN_DATA_FLOAT,CUDNN_TENSOR_NCHW,channels,channels,channels,channels);
 
     cudnnCreateConvolutionDescriptor(&convolution);
-    cudnnSetConvolution2dDescriptor(convolution,1,1,1,1,1,1,CUDNN_CONVOLUTION,CUDNN_DATA_FLOAT);
+    cudnnSetConvolution2dDescriptor(convolution,1,1,1,1,1,1,CUDNN_CROSS_CORRELATION,CUDNN_DATA_FLOAT);
 
     cudnnGetConvolutionForwardAlgorithm_v7(cudnn,input_tensor,kernel,convolution,output_tensor,CUDNN_CONVOLUTION_FWD_ALGO_GEMM,0,&convolution_algorithm);
 
@@ -85,19 +85,19 @@ int main() {
 
 
     // Allocate memory
-    cudaMalloc((void**)&d_workspace, workspace_bytes);
+    cudaMalloc(&d_workspace, workspace_bytes);
 
-    cudaMalloc((void**)&d_input, image_bytes);
+    cudaMalloc(&d_input, image_bytes);
     cudaMemcpy(d_input, image.ptr<float>(0), image_bytes, cudaMemcpyHostToDevice);
 
-    cudaMalloc((void**)&d_output, image_bytes);
+    cudaMalloc(&d_output, image_bytes);
     cudaMemcpy(d_output, 0, image_bytes, cudaMemcpyHostToDevice);
 
-    cudaMalloc((void**)&d_kernel, sizeof(h_kernel));
+    cudaMalloc(&d_kernel, sizeof(h_kernel));
     cudaMemcpy(d_kernel, h_kernel, sizeof(h_kernel),cudaMemcpyHostToDevice);
 
     // Compute the Convolution
-    cudnnConvolutionForward(cudnn, &alpha, input_tensor, d_input, kernel, d_kernel, convolution, convolution_algorithm.algo, d_workspace, workspace_bytes, &beta, output_tensor, h_output);
+    cudnnConvolutionForward(cudnn, &alpha, input_tensor, d_input, kernel, d_kernel, convolution, convolution_algorithm.algo, d_workspace, workspace_bytes, &beta, output_tensor, d_output);
 
     // Save the output image
     cudaMemcpy(h_output, d_output, image_bytes, cudaMemcpyDeviceToHost);
